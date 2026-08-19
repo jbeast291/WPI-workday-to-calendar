@@ -1,7 +1,7 @@
 :root {
-    --ubc-blue: #002145;
-    --ubc-blue-deep: #00132d;
-    --ubc-gold: #fdb515;
+    --ubc-blue: #ac2b37;
+    --ubc-blue-deep: #2d0000;
+    --ubc-gold: #ffffff;
     --ubc-white: #ffffff;
 }
 
@@ -348,7 +348,7 @@ td:nth-child(5) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #0d1117;
+    background: #ffffff36;
     color: #ffffff;
     padding: 6px 12px;
     border-radius: 999px;
@@ -363,7 +363,7 @@ td:nth-child(5) {
 
 .footer-cta:hover {
     text-decoration: none;
-    background: #161b22;
+    background: #9b9b9b36;
 }
 
 .footer-cta svg {

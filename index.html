@@ -4,19 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBC Workday to Calendar</title>
+    <title>WPI Workday to Calendar</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
     <main class="page-content">
-        <h1>UBC Workday to Calendar <span class="title-goal">(goal: Upload your Workday Excel export (.xlsx) to convert
-                it to an .ics calendar file.)</span></h1>
+        <h1>WPI Workday to Calendar 
+            <span class="title-goal">Export your calendar from workday into a format Outlook/Google Calendar can import</span>
+        </h1>
         <div class="step-block">
             <p class="step-heading">Step 1: Get your .xlsx file from Workday</p>
             <div class="howto-banner" aria-label="Workday export steps">
-                <div class="howto-step"><span class="step-num">1</span><span>Go to <a class="howto-link"
-                            href="https://myworkday.ubc.ca/" target="_blank" rel="noopener">Workday</a></span></div>
+                <div class="howto-step"><span class="step-num">1</span><span>Go to <a class="howto-link"href="https://wd5.myworkday.com/wpi/d/home.htmld" target="_blank" rel="noopener">Workday</a></span></div>
                 <span class="step-sep">→</span>
                 <div class="howto-step"><span class="step-num">2</span><span>Click "Academics"</span></div>
                 <span class="step-sep">→</span>
@@ -49,8 +49,7 @@
                             d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM8 3a.9.9 0 1 1 0 1.8A.9.9 0 0 1 8 3Zm1 9H7V6.5h2V12Z">
                         </path>
                     </svg>
-                    <span>Runs fully in your browser — only this page and its libraries load; your schedule data never
-                        leaves your device.</span>
+                    <span>Runs fully in your browser; your schedule never leaves your device.</span>
                 </p>
             </div>
             <br>
@@ -59,49 +58,20 @@
 
             <div id="status">Waiting for file...</div>
         </div>
-
-        <section id="tableSection" style="display:none;">
-            <h2>Parsed Events</h2>
-            <table id="preview">
-                <thead>
-                    <tr>
-                        <th>Course</th>
-                        <th>Type</th>
-                        <th>Days</th>
-                        <th>Time</th>
-                        <th>Dates</th>
-                        <th>Location</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </section>
-
-        <section id="calendarSection">
-            <h2>Weekly Preview</h2>
-            <div id="calendar"></div>
-        </section>
     </main>
 
     <footer class="site-footer">
         <div class="footer-content">
             <div class="footer-text">
                 <h2>About this site</h2>
-                <p class="footer-note">Not affiliated with the University of British Columbia or Workday.<br>This tool
-                    is provided "as is" without warranty of any kind.</p>
-                <p class="footer-meta"><strong>© 2026 jamubc.</strong> <em>Licensed under the <a href="LICENSE">MIT
-                            License</a>.</em></p>
+                <p class="footer-note">Not affiliated with Worcester Polytechnic Institute or Workday.<br>This tool is provided "as is" without warranty of any kind.</p>
+                <p class="footer-meta">Licensed under the <a href="LICENSE">MIT License</a>.</em></p>
             </div>
             <div class="footer-actions">
                 <div class="footer-callout">
-                    <span>Don't trust this? See the source yourself</span>
-                    <svg class="footer-arrow" viewBox="0 0 44 16" aria-hidden="true" focusable="false">
-                        <path d="M1 8h36"></path>
-                        <path d="M33 3l6 5-6 5"></path>
-                    </svg>
+                    <span>Source Code</span>
                 </div>
-                <a class="footer-cta" href="https://github.com/jamubc/UBC-workday-to-calendar" target="_blank"
+                <a class="footer-cta" href="https://github.com/jbeast291/WPI-workday-to-calendar" target="_blank"
                     rel="noopener" aria-label="GitHub repository">
                     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                         <path
