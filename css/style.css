@@ -1,0 +1,404 @@
+:root {
+    --ubc-blue: #002145;
+    --ubc-blue-deep: #00132d;
+    --ubc-gold: #fdb515;
+    --ubc-white: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    margin-bottom: 12px;
+}
+
+.title-goal {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+    display: block;
+    margin-top: 6px;
+}
+
+.step-heading {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.step-block {
+    margin: 18px 0 22px;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: nowrap;
+    margin: 8px 0 10px;
+}
+
+.privacy-note {
+    margin: 0;
+    font-size: 12px;
+    color: #2e7d32;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 auto;
+}
+
+.privacy-icon {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+
+.file-row input[type="file"] {
+    flex: 0 0 auto;
+}
+
+h2 {
+    margin: 30px 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 8px;
+}
+
+.info {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.howto-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #444;
+    text-align: center;
+}
+
+.howto-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #e8e8e8;
+    color: #333;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.step-sep {
+    color: #999;
+    font-weight: 700;
+}
+
+.howto-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.howto-link:hover {
+    color: #222;
+}
+
+.wd-icon-gear {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+}
+
+.wd-icon-gear .wd-icon-background {
+    fill: currentColor;
+    opacity: 0.25;
+}
+
+.wd-icon-gear .wd-icon-fill {
+    fill: currentColor;
+}
+
+input[type="file"] {
+    margin: 0;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#status {
+    margin: 20px 0;
+    padding: 12px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 11px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background: #e8e8e8;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+tr:nth-child(even) {
+    background: #fafafa;
+}
+
+tr:hover {
+    background: #f0f0f0;
+}
+
+td:first-child {
+    font-weight: 500;
+    max-width: 200px;
+}
+
+td:nth-child(3),
+td:nth-child(4),
+td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.error {
+    color: #c00;
+}
+
+.success {
+    color: #060;
+}
+
+#calendar {
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #fff;
+}
+
+#calendarSection {
+    display: none;
+}
+
+/* Minimal FullCalendar overrides */
+.fc {
+    font-size: 12px;
+}
+
+.fc-toolbar-title {
+    font-size: 16px !important;
+}
+
+.fc-button {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+}
+
+.fc-event {
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+.site-footer {
+    margin-top: auto;
+    background: var(--ubc-blue);
+    color: var(--ubc-white);
+    padding: 12px 0;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+}
+
+.site-footer h2 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    padding-bottom: 0;
+}
+
+.site-footer a {
+    color: var(--ubc-gold);
+    text-decoration: none;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.page-content {
+    width: 100%;
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 0 20px 32px;
+}
+
+.footer-text {
+    max-width: 720px;
+}
+
+.footer-note {
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 13px;
+}
+
+.footer-callout {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.78);
+    letter-spacing: 0.1px;
+}
+
+.footer-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.footer-arrow {
+    width: 44px;
+    height: 16px;
+    stroke: rgba(255, 255, 255, 0.75);
+    stroke-width: 2;
+    fill: none;
+}
+
+.footer-meta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d1117;
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    gap: 8px;
+    font-size: 13px;
+}
+
+.footer-cta:hover {
+    text-decoration: none;
+    background: #161b22;
+}
+
+.footer-cta svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+@media (max-width: 700px) {
+    .footer-content {
+        align-items: flex-start;
+    }
+
+    .footer-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .footer-cta {
+        width: 100%;
+    }
+
+    .file-row {
+        flex-direction: column;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (min-width: 900px) {
+    .howto-banner {
+        flex-wrap: nowrap;
+        gap: 8px;
+        font-size: 12px;
+    }
+}

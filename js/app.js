@@ -1,293 +1,230 @@
-/**
- * Main Application Logic
- * Handles file upload, parsing, preview rendering, and download
- */
+const fileInput = document.getElementById('fileInput');
+const parseBtn = document.getElementById('parseBtn');
+const statusDiv = document.getElementById('status');
+const downloadBtn = document.getElementById('downloadBtn');
 
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    const removeFile = document.getElementById('removeFile');
-    const previewSection = document.getElementById('previewSection');
-    const previewBody = document.getElementById('previewBody');
-    const eventCount = document.getElementById('eventCount');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const errorSection = document.getElementById('errorSection');
-    const errorMessage = document.getElementById('errorMessage');
-    const tryAgainBtn = document.getElementById('tryAgainBtn');
+let selectedFile = null;
 
-    // State
-    let currentEvents = [];
-    let currentFileName = 'schedule';
+// reset file input on page reload
+ResetFileInput();
 
-    // ==========================================
-    // File Upload Handling
-    // ==========================================
+function ResetFileInput(){
 
-    // Click to upload
-    uploadZone.addEventListener('click', () => {
-        fileInput.click();
-    });
+    fileInput.value = '';
+    selectedFile = null;
+    parseBtn.disabled = true;
+    downloadBtn.disabled = true;
+    statusDiv.textContent = 'Waiting for file...';
+}
 
-    // File input change
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
 
-    // Drag and drop
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
+    if (file) {
+        selectedFile = file;
 
-    uploadZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-    });
+        //Once a file is uploaded, allow parsing
+        parseBtn.disabled = false;
+        downloadBtn.disabled = true;
+        statusDiv.textContent = `File selected: ${file.name}`;
+    } else {
+        selectedFile = null;
+        parseBtn.disabled = true;
+        downloadBtn.disabled = true;
+        statusDiv.textContent = 'Waiting for file...';
+    }
+});
 
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
+// ======= BEGIN EXCEL PARSE =======
 
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
+let lastParseJsonData = null;
 
-    // Remove file button
-    removeFile.addEventListener('click', (e) => {
-        e.stopPropagation();
-        resetState();
-    });
+parseBtn.addEventListener('click', () => {
+    if (!selectedFile) return;
 
-    // Try again button
-    tryAgainBtn.addEventListener('click', () => {
-        resetState();
-    });
+    statusDiv.textContent = 'Parsing...';
 
-    // Download button
-    downloadBtn.addEventListener('click', () => {
-        downloadICS();
-    });
+    const reader = new FileReader();
 
-    // ==========================================
-    // File Processing
-    // ==========================================
-
-    async function handleFile(file) {
-        // Validate file type
-        if (!file.name.match(/\.(xlsx|xls)$/i)) {
-            showError('Please upload an Excel file (.xlsx or .xls)');
-            return;
-        }
-
-        // Store filename for later
-        currentFileName = file.name.replace(/\.(xlsx|xls)$/i, '');
-
-        // Show file info
-        fileName.textContent = file.name;
-        fileInfo.hidden = false;
-
+    reader.onload = (e) => {
         try {
-            // Read file
-            const data = await readFile(file);
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-            // Parse with WorkdayParser
-            const result = WorkdayParser.parse(data);
+            worksheet['!ref'] = `A1:N${GetWorksheetMaxRow(worksheet)}`;
+            
+            // Convert worksheet to raw 2D array
+            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            if (result.events.length === 0) {
-                if (result.errors.length > 0) {
-                    showError(result.errors[0]);
-                } else {
-                    showError('No course events found in the file. Make sure it\'s a Workday schedule export.');
-                }
+            // Find row index containing 'Meeting Patterns' or 'Section'
+            const headerRowIndex = rawData.findIndex(row =>
+                row && row.some(cell => typeof cell === 'string' && cell.includes('Meeting Patterns'))
+            );
+
+            if (headerRowIndex === -1) {
+                statusDiv.textContent = "Could not locate Workday header row.";
                 return;
             }
 
-            // Store events and show preview
-            currentEvents = result.events;
-            showPreview(result.events);
+            const headers = rawData[headerRowIndex];
+            const courseRows = rawData.slice(headerRowIndex + 1);
 
-            // Hide any previous errors
-            errorSection.hidden = true;
+            // Map course rows to JS objects
+            const jsonData = courseRows
+                .filter(row => row && row.length > 0)
+                .map(row => {
+                    let obj = {};
+                    headers.forEach((header, colIdx) => {
+                        if (header) {
+                            obj[header] = row[colIdx] !== undefined ? row[colIdx] : "";
+                        }
+                    });
+                    return obj;
+                });
 
-        } catch (err) {
-            console.error('Error processing file:', err);
-            showError('Unable to read the file. Make sure it\'s a valid Excel file.');
+            console.log("Final Parsed Courses:", jsonData);
+            statusDiv.textContent = `Successfully parsed ${jsonData.length} courses!`;
+            lastParseJsonData = jsonData;
+            downloadBtn.disabled = false;
+
+        } catch (error) {
+            console.error("Parsing Error:", error);
+            statusDiv.textContent = "Error parsing Excel file.";
+            downloadBtn.disabled = true;
         }
+    };
+
+    reader.readAsArrayBuffer(selectedFile);
+});
+
+function GetWorksheetMaxRow(worksheet) {
+    // Automatically recalculate the bounding box based on existing keys
+    const keys = Object.keys(worksheet).filter(k => !k.startsWith('!'));
+    const rows = keys.map(k => parseInt(k.replace(/[^\d]/g, ''), 10)).filter(Boolean);
+    const maxRow = Math.max(...rows);
+    return maxRow;
+}
+
+// ======= BEGIN ICS GENERATION =======
+
+// ======= UPDATED ICS GENERATION =======
+
+function generateICS(courses) {
+    let icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Workday Course Schedule//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH"
+    ];
+
+    const dayMap = { 'M': 'MO', 'T': 'TU', 'W': 'WE', 'R': 'TH', 'F': 'FR', 'S': 'SA', 'U': 'SU' };
+
+    courses.forEach((course, idx) => {
+        const pattern = course["Meeting Patterns"];
+        const startDateRaw = course["Start Date"];
+        const endDateRaw = course["End Date"];
+
+        if (!pattern || !startDateRaw || !endDateRaw) return;
+
+        // Pattern format: "M-T-R-F | 12:00 PM - 12:50 PM | Salisbury Labs 115 Kinnicutt Hall"
+        const parts = pattern.split('|').map(s => s.trim());
+        if (parts.length < 3) return;
+
+        const daysStr = parts[0];       // e.g., "M-T-R-F"
+        const timesStr = parts[1];      // e.g., "12:00 PM - 12:50 PM"
+        const location = parts[2];      // e.g., "Salisbury Labs 115"
+
+        // Map day letters to BYDAY codes
+        const byDays = daysStr.split('-').map(d => dayMap[d.trim()]).filter(Boolean).join(',');
+
+        // Convert times to HHMMSS format
+        const [startTimeStr, endTimeStr] = timesStr.split('-').map(t => t.trim());
+        const startTimeFormatted = formatTime24(startTimeStr);
+        const endTimeFormatted = formatTime24(endTimeStr);
+
+        // Find the FIRST actual class meeting date based on meeting pattern days
+        const firstOccurrenceDate = getFirstOccurrenceDate(startDateRaw, daysStr);
+        const startDateFormatted = formatDateYYYYMMDD(firstOccurrenceDate);
+        const endDateFormatted = formatDateYYYYMMDD(endDateRaw);
+
+        icsContent.push(
+            "BEGIN:VEVENT",
+            `UID:course-${idx}-${Date.now()}@workday`,
+            `SUMMARY:${course["Section"] || course["Course Listing"]}`,
+            `LOCATION:${location}`,
+            `DESCRIPTION:Instructor: ${course["Instructor"] || "N/A"}\\nFormat: ${course["Instructional Format"] || "N/A"}`,
+            `DTSTART;TZID=America/New_York:${startDateFormatted}T${startTimeFormatted}`,
+            `DTEND;TZID=America/New_York:${startDateFormatted}T${endTimeFormatted}`,
+            `RRULE:FREQ=WEEKLY;UNTIL=${endDateFormatted}T235959Z;BYDAY=${byDays}`,
+            "END:VEVENT"
+        );
+    });
+
+    icsContent.push("END:VCALENDAR");
+    return icsContent.join("\r\n");
+}
+
+function getFirstOccurrenceDate(startDateRaw, daysStr) {
+    const dayToJsNum = { 'M': 1, 'T': 2, 'W': 3, 'R': 4, 'F': 5, 'S': 6, 'U': 0 };
+
+    let dt;
+    if (typeof startDateRaw === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(startDateRaw);
+        dt = new Date(parsed.y, parsed.m - 1, parsed.d);
+    } else {
+        dt = new Date(startDateRaw);
     }
 
-    function readFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(new Uint8Array(e.target.result));
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(file);
-        });
-    }
+    // Convert days string like "T-F" to array of JS weekday numbers [2, 5]
+    const targetDays = daysStr.split('-').map(d => dayToJsNum[d.trim()]).filter(d => d !== undefined);
+    if (targetDays.length === 0) return dt;
 
-    // ==========================================
-    // Preview Rendering
-    // ==========================================
-
-    function showPreview(events) {
-        // Clear previous preview
-        previewBody.innerHTML = '';
-
-        let validCount = 0;
-
-        // Populate table
-        for (const event of events) {
-            const row = document.createElement('tr');
-
-            // Check if valid
-            const isValid = event.days.length > 0 && event.startTime && event.endTime;
-            if (isValid) validCount++;
-
-            if (!isValid) {
-                row.classList.add('row-error');
-            }
-
-            const daysDisplay = event.days.length > 0 ? event.days.join(', ') : '<span class="error-text">?</span>';
-
-            let timeDisplay = '-';
-            if (event.startTime && event.endTime) {
-                timeDisplay = `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`;
-            } else {
-                timeDisplay = '<span class="error-text" title="Could not parse time">⚠️ Time?</span>';
-            }
-
-            // Add raw data button if invalid
-            const rawButton = !isValid && event.raw ?
-                `<br><button class="btn-xs btn-debug" onclick="alert('Raw Data:\\n' + '${escapeJs(event.raw)}')">View Raw</button>` : '';
-
-            row.innerHTML = `
-                <td>
-                    <strong>${escapeHtml(event.courseCode)}</strong>
-                    ${!isValid ? '<div class="error-text-small">Parsing incomplete</div>' : ''}
-                </td>
-                <td>${escapeHtml(event.section)}</td>
-                <td>${escapeHtml(event.format)}</td>
-                <td>${daysDisplay}</td>
-                <td>${timeDisplay} ${rawButton}</td>
-                <td>${escapeHtml(event.location || '-')}</td>
-            `;
-
-            previewBody.appendChild(row);
+    // Advance date day-by-day until matching a meeting day
+    let checkDate = new Date(dt);
+    for (let i = 0; i < 7; i++) {
+        if (targetDays.includes(checkDate.getDay())) {
+            return checkDate;
         }
-
-        // Update event count
-        eventCount.textContent = validCount;
-
-        // Show warning if some events are invalid
-        if (validCount < events.length) {
-            const warning = document.createElement('div');
-            warning.className = 'warning-banner';
-            warning.innerHTML = `⚠️ Using flexible parsing. ${events.length - validCount} event(s) could not be fully parsed. Check the "View Raw" buttons.`;
-            previewSection.insertBefore(warning, previewSection.firstChild);
-        }
-
-        // Show preview section
-        previewSection.hidden = false;
+        checkDate.setDate(checkDate.getDate() + 1);
     }
 
-    function formatTime(time) {
-        if (!time) return '';
+    return dt;
+}
 
-        let hours = time.hours;
-        const minutes = String(time.minutes).padStart(2, '0');
-        const period = hours >= 12 ? 'PM' : 'AM';
+function formatTime24(timeStr) {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (modifier === 'PM' && hours !== '12') hours = parseInt(hours, 10) + 12;
+    if (modifier === 'AM' && hours === '12') hours = '00';
+    return `${String(hours).padStart(2, '0')}${minutes}00`;
+}
 
-        if (hours > 12) hours -= 12;
-        if (hours === 0) hours = 12;
-
-        return `${hours}:${minutes} ${period}`;
+function formatDateYYYYMMDD(val) {
+    let dt;
+    if (val instanceof Date) {
+        dt = val;
+    } else if (typeof val === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(val);
+        dt = new Date(parsed.y, parsed.m - 1, parsed.d);
+    } else {
+        dt = new Date(val);
     }
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}${m}${d}`;
+}
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function escapeJs(text) {
-        if (!text) return '';
-        return text.replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\r/g, "");
-    }
-
-    // ==========================================
-    // ICS Download
-    // ==========================================
-
-    function downloadICS() {
-        const validEvents = currentEvents.filter(e => e.days.length > 0 && e.startTime && e.endTime);
-
-        if (validEvents.length === 0) {
-            showError('No valid events were found to add to your calendar.');
-            return;
-        }
-
-        if (validEvents.length < currentEvents.length) {
-            if (!confirm(`Warning: Only ${validEvents.length} out of ${currentEvents.length} events could be parsed correctly. Download anyway?`)) {
-                return;
-            }
-        }
-
-        try {
-            // Generate ICS content
-            const icsContent = ICSGenerator.generate(validEvents);
-
-            // Create blob and download
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${currentFileName}.ics`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            URL.revokeObjectURL(url);
-
-        } catch (err) {
-            console.error('Error generating ICS:', err);
-            showError('Failed to generate calendar file. Please try again.');
-        }
-    }
-
-    // ==========================================
-    // Error Handling
-    // ==========================================
-
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorSection.hidden = false;
-        previewSection.hidden = true;
-    }
-
-    // ==========================================
-    // State Management
-    // ==========================================
-
-    function resetState() {
-        currentEvents = [];
-        currentFileName = 'schedule';
-        fileInput.value = '';
-        fileInfo.hidden = true;
-        previewSection.hidden = true;
-        errorSection.hidden = true;
-        previewBody.innerHTML = '';
-
-        // Remove warning banner if exists
-        const banner = previewSection.querySelector('.warning-banner');
-        if (banner) banner.remove();
-    }
+downloadBtn.addEventListener('click', () => {
+    if(lastParseJsonData == null) return;
+    const icsString = generateICS(lastParseJsonData);
+    const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'My_Course_Schedule.ics';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 });
