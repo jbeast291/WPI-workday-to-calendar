@@ -140,6 +140,8 @@ h2 {
 }
 
 .wd-icon-gear {
+    position: relative;
+    top: 1px;
     width: 16px;
     height: 16px;
     vertical-align: -2px;
